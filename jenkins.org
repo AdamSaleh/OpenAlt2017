@@ -1,0 +1,101 @@
+#+TITLE:     Automatizace otravné práce vývojářů pomocí Jenkinsu
+#+AUTHOR:    Adam Saleh
+#+EMAIL:     adam@asaleh.net 
+#+DATE:      2010-03-30 Tue
+#+DESCRIPTION: 
+#+KEYWORDS: 
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:   
+#+LINK_HOME: 
+#+startup: beamer
+#+LaTeX_CLASS: beamer
+#+LaTeX_CLASS_OPTIONS: [bigger]
+#+BEAMER_FRAME_LEVEL: 1
+#+COLUMNS: %40ITEM %10BEAMER_env(Env) %9BEAMER_envargs(Env Args) %4BEAMER_col(Col) %10BEAMER_extra(Extra)
+#+REVEAL_ROOT: http://cdn.jsdelivr.net/reveal.js/3.0.0/
+#+REVEAL_HLEVEL: 2
+
+* Úvod
+*** Kde pracujem?
+- RedHat Mobile 
+- QA v Brně
+- Platforma pre vývoj mobilných aplikácií - *closed-source*
+- Knižnice a integrovanie mobilných aplikácií s OpenShiftom - *open-source*
+
+*** Ako to vyzerá?
+[[./forms.png]]
+
+*** Poznámky k open-source
+- [[https://aerogear.org]]
+- [[http://feedhenry.org]] 
+- Pracujeme na ďalších veciach ...
+
+*** Na čom naozaj pracujem?
+- automatizovanie
+- Dev-Ops/Jenkins/CI-CD
+- udržiavanie infraštruktúry (OpenShift)
+  
+*** Konkrétne
+- tím 4 ľudí ({gryan,mnair,pamccart}@redhat)
+- pre cca 40-70 našich kolegov
+- takmer rok práce
+
+*** Upozornenie
+- opakovať po nás pravdepodobne nieje dobrý nápad
+- infraštruktúra je drahá, konfigurácia je komplikovaná
+- poskladajte si vlastné riešenie
+- ani my nepoužívame všetko naraz
+
+*** Čo myslím vlastným riešením?
+| Technológia                | Github PR | Internal Pipelines | Testing |
+|----------------------------+-----------+--------------------+---------|
+| Jenkins 2.0                | ✔         | ✔                  |         |
+| Pipeline scripts           |           | ✔                  | ✔       |
+| Jenkinsfiles in GitHub     | ✔         |                    |         |
+| Jenkins-Job-Builder        |           | ✔                  | ✔       |
+| Kubernetes-Slave provider  | ✔         | ✔                  |         |
+| OpenShift deployment       | ✔         | ✔                  |         |
+| Instrumented Configuration | ✔         | ✔                  |         |
+
+* Problémy 
+*** Čo sme potrebovali vyriešiť?
+- Denno-denná práca
+-- kontrola zmien pri PR
+-- byrokracia pri testovaní zmien
+- 1/Mesiac vydanie novej verzie systému
+-- skompilovať kód z 70 rôznych repozitárov
+-- aktualizovať konfiguráciu pre nasadenie na server 
+- zároveň aktualizovať zastaralú infraštruktúru
+
+* Ukážka 
+** Denno-denná práca
+*** Jeden z repozitárov:
+[[./000fhmbaas.png]]
+
+*** Pull-Request
+[[./010fhmbaas.png]]
+*** Testy
+[[./011fhmbaas.png]]
+*** Testy
+[[./012fhmbaas.png]]
+*** Pull-Request
+[[./010fhmbaas.png]]
+*** Aktualizácia verzie v inštalátore
+[[./013fhmbaas.png]]
+** Vydanie novej verzie
+*** Jenkins  
+[[./014internal_jenkins.png]]
+*** RC-pipeline
+[[./RC-pipeline.png]]
+
+*** Infraštruktúra
+- OpenShift na AWS
+- Jenkins Master na Openshifte
+  - 
+
+    
