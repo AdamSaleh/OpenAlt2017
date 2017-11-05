@@ -1,0 +1,767 @@
+% Created 2017-11-05 Sun 13:52
+% Intended LaTeX compiler: pdflatex
+\documentclass[bigger]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\usetheme{default}
+\author{Adam Saleh}
+\date{2010-03-30 Tue}
+\title{Automatizace otravné práce vývojářů pomocí Jenkinsu}
+\hypersetup{
+ pdfauthor={Adam Saleh},
+ pdftitle={Automatizace otravné práce vývojářů pomocí Jenkinsu},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 25.2.1 (Org mode 9.0.9)}, 
+ pdflang={English}}
+\begin{document}
+
+\maketitle
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+
+\section{Úvod}
+\label{sec:orgabc41d2}
+\begin{frame}[label={sec:orgd4a544d}]{Kde pracujem?}
+\begin{itemize}
+\item RedHat Mobile
+\item QA v Brně
+\item Platforma pre vývoj mobilných aplikácií - \alert{closed-source}
+\item Knižnice a integrovanie mobilných aplikácií s OpenShiftom - \alert{open-source}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:orgfe8f319}]{Ako to vyzerá?}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./forms.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[label={sec:org62caae0}]{Poznámky k open-source}
+\begin{itemize}
+\item \url{https://aerogear.org}
+\item \url{http://feedhenry.org}
+\item Pracujeme na ďalších veciach \ldots{}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:org1b9a421}]{Na čom naozaj pracujem?}
+\begin{itemize}
+\item automatizovanie
+\item Dev-Ops/Jenkins/CI-CD
+\item udržiavanie infraštruktúry (OpenShift)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:org28a5314}]{Konkrétne}
+\begin{itemize}
+\item tím 4 ľudí (\{gryan,mnair,pamccart\}@redhat)
+\item pre cca 40-70 našich kolegov
+\item takmer rok práce
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:org491a002}]{Upozornenie}
+\begin{itemize}
+\item opakovať po nás pravdepodobne nieje dobrý nápad
+\item infraštruktúra je drahá, konfigurácia je komplikovaná
+\item poskladajte si vlastné riešenie
+\item ani my nepoužívame všetko naraz
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:orgb4d6ae7}]{Čo myslím vlastným riešením?}
+\begin{center}
+\begin{tabular}{llll}
+Technológia & Github PR & Internal Pipelines & Testing\\
+\hline
+Jenkins 2.0 & ✔ & ✔ & \\
+Pipeline scripts &  & ✔ & ✔\\
+Jenkinsfiles in GitHub & ✔ &  & \\
+Jenkins-Job-Builder &  & ✔ & ✔\\
+Kubernetes-Slave provider & ✔ & ✔ & \\
+OpenShift deployment & ✔ & ✔ & \\
+Instrumented Configuration & ✔ & ✔ & \\
+\end{tabular}
+\end{center}
+\end{frame}
+
+\section{Problémy}
+\label{sec:org1328a95}
+\begin{frame}[label={sec:orgcbf3199}]{Čo sme potrebovali vyriešiť?}
+\begin{itemize}
+\item Denno-denná práca
+\begin{itemize}
+\item kontrola zmien pri PR
+\item byrokracia pri testovaní zmien
+\end{itemize}
+\item 1/Mesiac vydanie novej verzie systému
+\begin{itemize}
+\item skompilovať kód z 70 rôznych repozitárov
+\item aktualizovať konfiguráciu pre nasadenie na server
+\end{itemize}
+\item zároveň aktualizovať zastaralú infraštruktúru
+\end{itemize}
+\end{frame}
+
+\section{Ukážka}
+\label{sec:org0ededa0}
+\subsection{Denno-denná práca}
+\label{sec:org451f7ed}
+\begin{frame}[label={sec:org13e92da}]{Jeden z repozitárov:}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./000fhmbaas.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[label={sec:org46724a6}]{Pull-Request}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./010fhmbaas.png}
+\end{center}
+\end{frame}
+\begin{frame}[label={sec:org55c3e23}]{Testy}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./011fhmbaas.png}
+\end{center}
+\end{frame}
+\begin{frame}[label={sec:org4445d81}]{Testy}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./012fhmbaas.png}
+\end{center}
+\end{frame}
+\begin{frame}[label={sec:org476f058}]{Pull-Request}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./010fhmbaas.png}
+\end{center}
+\end{frame}
+\begin{frame}[label={sec:org01fa9ef}]{Aktualizácia verzie v inštalátore}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./013fhmbaas.png}
+\end{center}
+\end{frame}
+\subsection{Vydanie novej verzie}
+\label{sec:org6abdeef}
+\begin{frame}[label={sec:org18d235d}]{Jenkins}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./014internal_jenkins.png}
+\end{center}
+\end{frame}
+\begin{frame}[label={sec:org6c5fd08}]{RC-pipeline}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./RC-pipeline.png}
+\end{center}
+\end{frame}
+
+\section{Ako sme to dali dokopy}
+\label{sec:orge4f8b99}
+\begin{frame}[label={sec:orgf8650e7}]{Osnova}
+\begin{itemize}
+\item Kontrolovanie PR
+\item Jenkinsfile a Groovy
+\item Zdielanie kódu a Jenkinsfile
+\item Konfigurácia Jenkinsu
+\item Samostatná pipeline a Job Builder
+\item Jenkins, konfigurácia a Docker
+\item OpenShift
+\end{itemize}
+\end{frame}
+
+\subsection{Kontrolovanie PR}
+\label{sec:orgf7e1fff}
+\begin{frame}[label={sec:org9135c83}]{GitHub Organization Plugin}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./015gh_org.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[label={sec:org2423c22}]{Takto vyzerá nastavenie organizácie}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./017gh_org_feedhenry.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[label={sec:orgc64d854}]{Odporúčam upresniť repozitáre}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./016gh_org_filter.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[label={sec:orgf98768d}]{Na strane GitHubu treba nastaviť hook}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./018gh_org_webhook.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[label={sec:org7e60d48}]{toto nám dá automatickú kontrolu}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./019gh_org_list.png}
+\end{center}
+\end{frame}
+
+\subsection{Jenkinsfile a Groovy}
+\label{sec:org0560c55}
+
+\begin{frame}[fragile,label={sec:org3178475}]{Takto vyzerá jeden z našich Jenkinsfile}
+ \begin{verbatim}
+@Library('fh-pipeline-library') _
+node('nodejs4') {
+    step([$class: 'WsCleanup'])
+    stage ('Checkout') {
+        checkout scm
+    }
+    stage('Install Dependencies') {
+        npmInstall {}
+    }
+    stage('Unit tests') {
+        sh 'grunt fh-unit'
+    }
+    stage('Build') {
+        gruntBuild { name = 'fh-mbaas-api' }
+    }
+}
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile,label={sec:org042d6dc}]{\ldots{}takto bez zdielanej knižnice?}
+ \begin{verbatim}
+
+node('nodejs4') {
+    step([$class: 'WsCleanup'])
+    stage ('Checkout') {
+        checkout scm
+    }
+    stage('Install Dependencies') {
+        sh "npm install"
+    }
+    stage('Unit tests') {
+        sh 'grunt unit'
+    }
+    stage('Build') {
+        sh "grunt dist"
+    }
+}
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[label={sec:org51e8ed5}]{syntax?}
+\begin{itemize}
+\item \url{https://jenkins.io/doc/pipeline/steps/}
+\item \url{https://jenkins.io/doc/pipeline/examples/}
+\item \url{https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:orgb6dd0a0}]{experimenty a vývoj s tlačítkom Replay}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./020replay.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[label={sec:orgc9076a3}]{formulár na generovanie kódu}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./021replay.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[label={sec:org1b44b9a}]{zoznam sprístupnených premenných}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./022variables.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile,label={sec:org9369b59}]{nie úple groovy}
+ \begin{itemize}
+\item všetok kód musí byť serializovateľný
+\item pred májom (květen) nefungovalo
+\begin{verbatim}
+list.each { param ->
+    println "Param: ${param}"
+}
+\end{verbatim}
+\item už funguje, ale treba mať jenkins >2.7
+\item pri problémoch sa dá použiť anotácia @NonCPS
+\end{itemize}
+\end{frame}
+\begin{frame}[fragile,label={sec:org0aedfd9}]{práca s @NonCps}
+ \begin{verbatim}
+@NonCPS
+def printParams(list) {
+ list.each { param ->
+     println "Param: ${param}"
+ }
+}
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[label={sec:org935eae4}]{deklaratívna syntax?}
+\begin{itemize}
+\item Existuje aj \url{https://jenkins.io/doc/book/pipeline/syntax/\#declarative-pipeline}
+\item Integrované s UI
+\item Zatiaľ sme nepoužili, príliš veľa zjednodušení
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:org00fc8c5}]{UI pre deplarativnu syntax}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./023pipeline_editor.png}
+\end{center}
+\end{frame}
+
+\subsection{Zdielanie kódu a Jenkinsfile}
+\label{sec:orgc198fe6}
+\begin{frame}[fragile,label={sec:org13c63e3}]{\ldots{}v skutočnosti bez zdielanej knižnice}
+ \begin{verbatim}
+
+node('nodejs4') {
+    step([$class: 'WsCleanup'])
+    stage ('Checkout') {
+        checkout scm
+    }
+    stage('Install Dependencies') {
+      sh '''
+        npm install --production
+        npm ls
+        npm install -g https://github.com/bucharest-gold/license-reporter#v0.3.0
+        license-reporter --ignore-version-range --all --silent --file licenses.xml
+        npm install
+      '''
+    }
+
+\end{verbatim}
+\begin{itemize}
+\item rovnakú sekvenciu máme v cca 40 repozitároch
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:orgdbbbb3c}]{máme nakonfigurovanú knižicu}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./024pipeline_library.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile,label={sec:orga0b3a77}]{ktorá ukazuje na repozitár}
+ \begin{itemize}
+\item \url{https://github.com/feedhenry/fh-pipeline-library}
+\item ./vars/npmInstall.groovy
+\begin{verbatim}
+def call() {
+    sh '''
+        npm install --production
+        npm ls
+        npm install -g https://github.com/bucharest-gold/license-reporter#v0.3.0
+        license-reporter --ignore-version-range --all --silent --file licenses.xml
+        npm install
+        npm install grunt-cli -g
+      '''
+}
+\end{verbatim}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile,label={sec:orgcd35de8}]{Takto môžem knižnicu použiť}
+ \begin{verbatim}
+@Library('fh-pipeline-library') _
+node('nodejs4') {
+    step([$class: 'WsCleanup'])
+    stage ('Checkout') {
+        checkout scm
+    }
+    stage('Install Dependencies') {
+        npmInstall()
+    }
+
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile,label={sec:org4f09fa6}]{Čo ak potrebujem testovať s verziou vo vývoji?}
+ \begin{verbatim}
+@Library('fh-pipeline-library@PR-128') _
+node('nodejs4') {
+    step([$class: 'WsCleanup'])
+    stage ('Checkout') {
+        checkout scm
+    }
+    stage('Install Dependencies') {
+        npmInstall()
+    }
+
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile,label={sec:org40517a0}]{Čo ak potrebujem zmeniť funkciu?}
+ \begin{itemize}
+\item toto robíme opatrne
+\item čo ak sa niektorý z 70 repozitárov bude spoliehať na starú verziu?
+\item fh-pipeline-library/vars/dockerBinaryBuild.groovyy
+\begin{verbatim}
+def call(String name, String version, String dockerHubOrg, String dockerHubRepo = name, String credentialId = "dockerhubjenkins", String fromDir = './docker', Closure body = {}) {
+    echo "Deprecated: this should no longer be needed, use `buildWithDockerStrategy` instead"
+    params = [name: name, org= dockerHubOrg ...]
+    buildWithDockerStrategy params
+}
+\end{verbatim}
+\item nová funkcia je v fh-pipeline-library/vars/buildWithDockerStrategy.groovy
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:orgb7c0cba}]{fh-pipeline-library vyzerá dôležito, ako ju testujete?}
+\begin{itemize}
+\item existujú unit-testy, ale zatiaľ sme ich nepoužili
+\item \url{https://github.com/macg33zr/pipelineUnit}
+\item máme vo fh-pipeline-library Jenkinsfile
+\item Jenkinsfile vie zistiť či má testovať zmenenú knižnicu
+\item \url{https://github.com/feedhenry/fh-pipeline-library/blob/master/Jenkinsfile}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile,label={sec:org7ca9310}]{samo-testovanie v fh-pipeline-library}
+ \begin{verbatim}
+env.BRANCH_NAME = env.BRANCH_NAME ?: 'master'
+String gitref = env.CHANGE_ID ? "pr/${env.CHANGE_ID}" : env.BRANCH_NAME
+def fhPipelineLibrary = library("fh-pipeline-library@${gitref}")
+def utils = fhPipelineLibrary.org.feedhenry.Utils.new()
+
+testStage('getReleaseBranch') {
+    print utils.getReleaseBranch('1.2.3')
+}
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[label={sec:orge114ea0}]{Otázky?}
+\begin{itemize}
+\item podľa mňa som práve skončil s tým pekným a zaujímavým :)
+\item náleduje ifraštruktúra ktorá drží po kope izolepou :)
+\end{itemize}
+\end{frame}
+
+\subsection{Konfigurácia Jenkinsu}
+\label{sec:org8eabab8}
+\begin{frame}[label={sec:org1ee62d2}]{Všetko čo som tu doteraz ukazoval nastavujeme cez skripty}
+\begin{itemize}
+\item Organizácie na GitHube
+\item fh-pipeline-library
+\item účet na prihlasovanie do
+\begin{itemize}
+\item GitHubu (kde máme zdrojáky)
+\item AWS (kde nám bežia servery)
+\item Jira (kde máme issue-tracking)
+\end{itemize}
+\item a veľa ďalších vecí
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile,label={sec:orga8188a2}]{Ukážka}
+ \begin{itemize}
+\item interné repo
+\item config.ini
+\end{itemize}
+\begin{verbatim}
+[jenkins]
+user=updateme
+password=updateme
+url=http://updateme.com:9999
+query_plugins_info=False
+\end{verbatim}
+\end{frame}
+\begin{frame}[fragile,label={sec:org3c14a90}]{konfiguračný skript}
+ \begin{itemize}
+\item scripts/configure\(_{\text{jenkins.sh}}\)
+\end{itemize}
+\begin{verbatim}
+SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CONFIG="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
+do_groovy_script_command() {
+  $SCRIPTS_DIR/run_groovy_script.sh $CONFIG $REMOTE $SCRIPTS_DIR/"$@"
+}
+#Git (Git plugin)
+do_groovy_script_command 'set_git_global_config.groovy'
+
+#Credentials
+do_groovy_script_command 'add_ssh_credentials.groovy'
+\end{verbatim}
+\end{frame}
+\begin{frame}[fragile,label={sec:org4277a6c}]{Groovy skript na nastavenie gitu}
+ \begin{verbatim}
+import jenkins.model.*
+def inst = Jenkins.getInstance()
+def desc = inst.getDescriptor("hudson.plugins.git.GitSCM")
+desc.setGlobalConfigName("Jenkins")
+desc.setGlobalConfigEmail("jenkins@wendy.feedhenry.net")
+desc.save()
+\end{verbatim}
+\end{frame}
+\begin{frame}[fragile,label={sec:orgc76a8f4}]{Groovy na nastavenie ssh kľúča}
+ \begin{verbatim}
+import jenkins.model.*
+import com.cloudbees.plugins.credentials.*
+import com.cloudbees.plugins.credentials.common.*
+import com.cloudbees.plugins.credentials.domains.*
+import com.cloudbees.plugins.credentials.impl.*
+import com.cloudbees.jenkins.plugins.sshcredentials.impl.*
+import hudson.plugins.sshslaves.*;
+domain = Domain.global()
+store = Jenkins.instance.getExtensionList('com.cloudbees.plugins.credentials.SystemCredentialsProvider')[0].getStore()
+credId = 'jenkinsgithub'
+username = 'jenkins'
+privateKeyStr = "-----BEGIN RSA PRIVATE KEY-----\nMIIJ"
+privateKeySource = new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource(privateKeyStr)
+description = "Jenkins GitHub SSH Credentials"
+
+privateKey = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL,credId,username,privateKeySource,"",description)
+store.addCredentials(domain, privateKey)
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[label={sec:org79e4fff}]{\ldots{} trochu viac o izolepe}
+\begin{itemize}
+\item tieto skripty spúšťame cez jenkins-cli
+\item ide o +/- ekvivalent spúšťania skriptov v Jenkins konzole
+\item \$JENKINS/script
+\end{itemize}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./025script.png}
+\end{center}
+\end{frame}
+
+\subsection{Samostatná pipeline a Job Builder}
+\label{sec:orgcc75edb}
+\begin{frame}[fragile,label={sec:org31a0119}]{Jenkins Job Builder}
+ \begin{itemize}
+\item na konfiguráciu samostatnej pipeline používame
+\begin{itemize}
+\item \url{https://docs.openstack.org/infra/jenkins-job-builder/}
+\item baca7d15504a93c9d92f15e034470cbdc86f2615
+\end{itemize}
+\item s pluginom na podporu pipeline
+\begin{itemize}
+\item \url{https://github.com/rusty-dev/jenkins-job-builder-pipeline}
+\end{itemize}
+\end{itemize}
+\begin{verbatim}
+jenkins-jobs --conf config.ini update $DIR_WITH_YAML 
+\end{verbatim}
+\end{frame}
+\begin{frame}[fragile,label={sec:orgc2b058e}]{Yaml konfigurácia pre Pipeline}
+ \begin{verbatim}
+- job:
+    project-type: pipeline
+    concurrent: true
+    display-name: RHMAP Cluster Destroy
+    name: rhmap_cluster_destroy
+    parameters:
+    - string:
+        default: ''
+        description: Cluster Name
+        name: clusterName
+    pipeline:
+      script: |
+        #!groovy
+\end{verbatim}
+\end{frame}
+\begin{frame}[fragile,label={sec:org08e0f87}]{.. v skutočnosti komplikovanejšie}
+ \begin{itemize}
+\item Používame Jenkinsfile ktorý je v rovnakom adresári
+\end{itemize}
+\begin{verbatim}
+pipeline:
+     script-path: jobs/wendy/cluster/cluster-destroy/Jenkinsfile
+     scm:
+       - git:
+           branches:
+             - 'master'
+           url: 'git@github.com:fheng/jenkins-bob-builder.git'
+           credentials-id: jenkinsgithub
+           skip-tag: true
+           wipe-workspace: false
+\end{verbatim}
+\begin{itemize}
+\item väčšinou odkazujeme na GH
+\begin{itemize}
+\item netreba updatovať
+\end{itemize}
+\item máme skript na konverziu, pre testovacie účely
+\end{itemize}
+\end{frame}
+
+\subsection{Jenkins, konfigurácia a Docker}
+\label{sec:org0c0f0b4}
+\begin{frame}[label={sec:orgd895b85}]{Kubernetes plugin}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./026kubernetes.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[label={sec:orgd966fbc}]{Príklad - jenkins-slave-ansible}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./027ansible_slave.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[label={sec:org0290c09}]{Príklad - jenkins-slave-ansible}
+\begin{itemize}
+\item \url{https://hub.docker.com/r/fhwendy/jenkins-slave-ansible/}
+\item zdroják
+\begin{itemize}
+\item \url{https://github.com/feedhenry/wendy-jenkins-s2i-configuration}
+\item /blob/master/slave-ansible/Dockerfile
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile,label={sec:org2a415c3}]{jenkins-slave-ansible Dockerfile}
+ \begin{itemize}
+\item používame vlastný base-image
+\item pôvodne sme používali openshift/jenkins-slave-base-centos7
+\end{itemize}
+\begin{verbatim}
+FROM docker.io/fhwendy/jenkins-slave-base-centos7:latest
+
+MAINTAINER Oleg Matskiv <omatskiv@redhat.com>
+
+USER root
+
+RUN yum -y install \
+        epel-release \
+        wget && 
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[label={sec:org800bcc1}]{Jenkins Master}
+\begin{itemize}
+\item openshift/jenkins-2-centos7
+\begin{itemize}
+\item s ďalšou konfiguráciou cez s2i
+\item \url{https://github.com/feedhenry/wendy-jenkins-s2i-configuration}
+\item zoznam pluginov s verziami
+\item vyčistenie prednastavených jobov
+\end{itemize}
+\item s2i zoberie openshift/jenkins-2-centos7 a aplikuje kinfiguráciu z repa
+\end{itemize}
+\end{frame}
+
+\subsection{OpenShift}
+\label{sec:orgf50299f}
+\begin{frame}[fragile,label={sec:org4ad0fab}]{Prečo vlastne používame openshift?}
+ \begin{itemize}
+\item Pretože sme ho už používali na iné projekty
+\item Plánovali sme postaviť nový produkt na kombinácii Openshift+Jenkins
+\item Konfigurácia == Kód
+\end{itemize}
+
+\begin{verbatim}
+oc login
+oc new-project jenkins-wendy
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile,label={sec:orgcf6e538}]{Slave konfigurácia v openshifte}
+ \begin{itemize}
+\item slave-image-template.yaml
+\end{itemize}
+\begin{verbatim}
+---
+apiVersion: v1
+kind: Template
+labels:
+  template: slave-image-wendy-template
+metadata:
+  annotations:
+    tags: jenkins
+  name: slave-image-wendy
+objects:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: ${IMAGE_NAME}
+    annotations:
+        slave-label: ${SLAVE_LABEL}
+    labels:
+      role: jenkins-slave
+  spec:
+    dockerImageRepository: "docker.io/fhwendy/${IMAGE_NAME}"
+\end{verbatim}
+\end{frame}
+\begin{frame}[fragile,label={sec:org44c3652}]{Parametre a nastavenie}
+ \begin{verbatim}
+parameters:
+- description: The name of the repository branch to reference in the configuration
+  displayName: Branch
+  name: IMAGE_NAME
+- description: The label
+  name: SLAVE_LABEL
+\end{verbatim}
+
+\begin{verbatim}
+oc new-app -p SLAVE_LABEL="ansible" -p IMAGE_NAME=slave-ans -f  slave-image-template.yml
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[label={sec:orgcb8a576}]{Jenkins Master integrovaný s openshiftom}
+\begin{itemize}
+\item autorizácia/autentizácia cez openshift
+\item automatické limity na spustený slave
+\item jednoduchšia integrácia s i.e. nexus3
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile,label={sec:orgd27d721}]{Pipeline integrovaná s openshiftom}
+ \begin{itemize}
+\item prístup k openshiftu na ktorom beží
+\item používame openshift na integrovanie databázy
+\begin{itemize}
+\item \url{https://github.com/feedhenry/fh-pipeline-library/blob/master/vars/withOpenshiftServices.groovy}
+\end{itemize}
+\end{itemize}
+\begin{verbatim}
+withOpenshiftServices(['mongodb']) {
+    stage('Acceptance Tests') {
+        sh 'grunt fh-accept'
+    }
+}
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile,label={sec:org3c8d540}]{Openshift ako build-server}
+ \begin{itemize}
+\item používame openshift na update docker-hubu
+\begin{itemize}
+\item \url{https://github.com/feedhenry/fh-pipeline-library/blob/master/vars/dockerBuildNodeComponent.groovy}
+\end{itemize}
+\end{itemize}
+\begin{verbatim}
+stage('Build Image') {
+    dockerBuildNodeComponent(COMPONENT, DOCKER_HUB_ORG)
+}
+\end{verbatim}
+\end{frame}
+
+\section{Záverom}
+\label{sec:org8888dc9}
+
+\begin{frame}[label={sec:orgad341ee}]{Zhrnutie}
+\begin{itemize}
+\item odporúčam používať groovy, aj s knižnicami
+\item konfigurácia v kóde je super aj ak lepená izolepou
+\item ak už niekde máte openshift, použite ho
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:org2e9084e}]{Ďakujem za pozornosť!}
+\end{frame}
+
+\begin{frame}[label={sec:orgd5b1ea3}]{Otázky?}
+\end{frame}
+\end{document}

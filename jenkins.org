@@ -19,6 +19,8 @@
 #+COLUMNS: %40ITEM %10BEAMER_env(Env) %9BEAMER_envargs(Env Args) %4BEAMER_col(Col) %10BEAMER_extra(Extra)
 #+REVEAL_ROOT: http://cdn.jsdelivr.net/reveal.js/3.0.0/
 #+REVEAL_HLEVEL: 2
+#+REVEAL_TRANS: fade
+#+REVEAL_PLUGINS: (highlight)
 
 * Úvod
 *** Kde pracujem?
@@ -65,11 +67,11 @@
 * Problémy 
 *** Čo sme potrebovali vyriešiť?
 - Denno-denná práca
--- kontrola zmien pri PR
--- byrokracia pri testovaní zmien
+ - kontrola zmien pri PR
+ - byrokracia pri testovaní zmien
 - 1/Mesiac vydanie novej verzie systému
--- skompilovať kód z 70 rôznych repozitárov
--- aktualizovať konfiguráciu pre nasadenie na server 
+ - skompilovať kód z 70 rôznych repozitárov
+ - aktualizovať konfiguráciu pre nasadenie na server 
 - zároveň aktualizovať zastaralú infraštruktúru
 
 * Ukážka 
@@ -93,9 +95,455 @@
 *** RC-pipeline
 [[./RC-pipeline.png]]
 
-*** Infraštruktúra
-- OpenShift na AWS
-- Jenkins Master na Openshifte
-  - 
+* Ako sme to dali dokopy
+*** Osnova
+- Kontrolovanie PR
+- Jenkinsfile a Groovy
+- Zdielanie kódu a Jenkinsfile
+- Konfigurácia Jenkinsu
+- Samostatná pipeline a Job Builder
+- Jenkins, konfigurácia a Docker
+- OpenShift
 
+** Kontrolovanie PR
+*** GitHub Organization Plugin
+[[./015gh_org.png]]
+
+*** Takto vyzerá nastavenie organizácie
+[[./017gh_org_feedhenry.png]]
+
+*** Odporúčam upresniť repozitáre
+[[./016gh_org_filter.png]]
+
+*** Na strane GitHubu treba nastaviť hook
+[[./018gh_org_webhook.png]]
+
+*** toto nám dá automatickú kontrolu
+[[./019gh_org_list.png]]
+
+** Jenkinsfile a Groovy
+
+*** Takto vyzerá jeden z našich Jenkinsfile
+   #+BEGIN_SRC groovy
+@Library('fh-pipeline-library') _
+node('nodejs4') {
+    step([$class: 'WsCleanup'])
+    stage ('Checkout') {
+        checkout scm
+    }
+    stage('Install Dependencies') {
+        npmInstall {}
+    }
+    stage('Unit tests') {
+        sh 'grunt fh-unit'
+    }
+    stage('Build') {
+        gruntBuild { name = 'fh-mbaas-api' }
+    }
+}
+   #+END_SRC
+
+*** ...takto bez zdielanej knižnice? 
+   #+BEGIN_SRC groovy
+
+node('nodejs4') {
+    step([$class: 'WsCleanup'])
+    stage ('Checkout') {
+        checkout scm
+    }
+    stage('Install Dependencies') {
+        sh "npm install"
+    }
+    stage('Unit tests') {
+        sh 'grunt unit'
+    }
+    stage('Build') {
+        sh "grunt dist"
+    }
+}
+   #+END_SRC
+
+*** syntax?
+- [[https://jenkins.io/doc/pipeline/steps/]]
+- https://jenkins.io/doc/pipeline/examples/
+- https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/
+
+*** experimenty a vývoj s tlačítkom Replay
+[[./020replay.png]]
+
+*** formulár na generovanie kódu
+    [[./021replay.png]]
+
+*** zoznam sprístupnených premenných
+[[./022variables.png]]
+
+*** nie úple groovy
+- všetok kód musí byť serializovateľný
+- pred májom (květen) nefungovalo
+   #+BEGIN_SRC groovy
+    list.each { param ->
+        println "Param: ${param}"
+    }
+   #+END_SRC
+- už funguje, ale treba mať jenkins >2.7
+- pri problémoch sa dá použiť anotácia @NonCPS
+*** práca s @NonCps
+   #+BEGIN_SRC groovy
+   @NonCPS
+   def printParams(list) {
+    list.each { param ->
+        println "Param: ${param}"
+    }
+   }
+   #+END_SRC
+
+*** deklaratívna syntax?
+- Existuje aj [[https://jenkins.io/doc/book/pipeline/syntax/#declarative-pipeline]]
+- Integrované s UI
+- Zatiaľ sme nepoužili, príliš veľa zjednodušení
+
+*** UI pre deplarativnu syntax
+[[./023pipeline_editor.png]]
+
+** Zdielanie kódu a Jenkinsfile
+*** ...v skutočnosti bez zdielanej knižnice 
+   #+BEGIN_SRC groovy
+
+node('nodejs4') {
+    step([$class: 'WsCleanup'])
+    stage ('Checkout') {
+        checkout scm
+    }
+    stage('Install Dependencies') {
+      sh '''
+        npm install --production
+        npm ls
+        npm install -g https://github.com/bucharest-gold/license-reporter#v0.3.0
+        license-reporter --ignore-version-range --all --silent --file licenses.xml
+        npm install
+      '''
+    }
     
+   #+END_SRC
+- rovnakú sekvenciu máme v cca 40 repozitároch
+
+*** máme nakonfigurovanú knižicu
+[[./024pipeline_library.png]]
+
+*** ktorá ukazuje na repozitár
+- https://github.com/feedhenry/fh-pipeline-library
+- ./vars/npmInstall.groovy
+   #+BEGIN_SRC groovy
+def call() {
+    sh '''
+        npm install --production
+        npm ls
+        npm install -g https://github.com/bucharest-gold/license-reporter#v0.3.0
+        license-reporter --ignore-version-range --all --silent --file licenses.xml
+        npm install
+        npm install grunt-cli -g
+      '''
+}
+   #+END_SRC
+
+*** Takto môžem knižnicu použiť 
+   #+BEGIN_SRC groovy
+@Library('fh-pipeline-library') _
+node('nodejs4') {
+    step([$class: 'WsCleanup'])
+    stage ('Checkout') {
+        checkout scm
+    }
+    stage('Install Dependencies') {
+        npmInstall()
+    }
+
+   #+END_SRC
+
+*** Čo ak potrebujem testovať s verziou vo vývoji? 
+   #+BEGIN_SRC groovy
+@Library('fh-pipeline-library@PR-128') _
+node('nodejs4') {
+    step([$class: 'WsCleanup'])
+    stage ('Checkout') {
+        checkout scm
+    }
+    stage('Install Dependencies') {
+        npmInstall()
+    }
+
+   #+END_SRC
+
+*** Čo ak potrebujem zmeniť funkciu? 
+- toto robíme opatrne
+- čo ak sa niektorý z 70 repozitárov bude spoliehať na starú verziu?
+- fh-pipeline-library/vars/dockerBinaryBuild.groovyy
+   #+BEGIN_SRC groovy
+def call(String name, String version, String dockerHubOrg, String dockerHubRepo = name, String credentialId = "dockerhubjenkins", String fromDir = './docker', Closure body = {}) {
+    echo "Deprecated: this should no longer be needed, use `buildWithDockerStrategy` instead"
+    params = [name: name, org= dockerHubOrg ...]
+    buildWithDockerStrategy params
+}
+   #+END_SRC
+- nová funkcia je v fh-pipeline-library/vars/buildWithDockerStrategy.groovy
+
+*** fh-pipeline-library vyzerá dôležito, ako ju testujete?
+- existujú unit-testy, ale zatiaľ sme ich nepoužili
+- https://github.com/macg33zr/pipelineUnit
+- máme vo fh-pipeline-library Jenkinsfile
+- Jenkinsfile vie zistiť či má testovať zmenenú knižnicu
+- https://github.com/feedhenry/fh-pipeline-library/blob/master/Jenkinsfile
+
+*** samo-testovanie v fh-pipeline-library
+   #+BEGIN_SRC groovy
+    env.BRANCH_NAME = env.BRANCH_NAME ?: 'master'
+    String gitref = env.CHANGE_ID ? "pr/${env.CHANGE_ID}" : env.BRANCH_NAME
+    def fhPipelineLibrary = library("fh-pipeline-library@${gitref}")
+    def utils = fhPipelineLibrary.org.feedhenry.Utils.new()
+
+    testStage('getReleaseBranch') {
+        print utils.getReleaseBranch('1.2.3')
+    }
+   #+END_SRC
+
+*** Otázky?
+- podľa mňa som práve skončil s tým pekným a zaujímavým :)
+- náleduje ifraštruktúra ktorá drží po kope izolepou :) 
+
+** Konfigurácia Jenkinsu
+*** Všetko čo som tu doteraz ukazoval nastavujeme cez skripty
+- Organizácie na GitHube
+- fh-pipeline-library
+- účet na prihlasovanie do
+ - GitHubu (kde máme zdrojáky)
+ - AWS (kde nám bežia servery)
+ - Jira (kde máme issue-tracking)
+- a veľa ďalších vecí
+
+*** Ukážka
+- interné repo
+- config.ini
+#+BEGIN_SRC
+[jenkins]
+user=updateme
+password=updateme
+url=http://updateme.com:9999
+query_plugins_info=False
+#+END_SRC
+*** konfiguračný skript
+- scripts/configure_jenkins.sh
+#+BEGIN_SRC bash
+SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CONFIG="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
+do_groovy_script_command() {
+  $SCRIPTS_DIR/run_groovy_script.sh $CONFIG $REMOTE $SCRIPTS_DIR/"$@"
+}
+#Git (Git plugin)
+do_groovy_script_command 'set_git_global_config.groovy'
+
+#Credentials
+do_groovy_script_command 'add_ssh_credentials.groovy'
+#+END_SRC
+*** Groovy skript na nastavenie gitu
+#+BEGIN_SRC groovy
+import jenkins.model.*
+def inst = Jenkins.getInstance()
+def desc = inst.getDescriptor("hudson.plugins.git.GitSCM")
+desc.setGlobalConfigName("Jenkins")
+desc.setGlobalConfigEmail("jenkins@wendy.feedhenry.net")
+desc.save()
+#+END_SRC
+*** Groovy na nastavenie ssh kľúča
+#+BEGIN_SRC groovy
+import jenkins.model.*
+import com.cloudbees.plugins.credentials.*
+import com.cloudbees.plugins.credentials.common.*
+import com.cloudbees.plugins.credentials.domains.*
+import com.cloudbees.plugins.credentials.impl.*
+import com.cloudbees.jenkins.plugins.sshcredentials.impl.*
+import hudson.plugins.sshslaves.*;
+domain = Domain.global()
+store = Jenkins.instance.getExtensionList('com.cloudbees.plugins.credentials.SystemCredentialsProvider')[0].getStore()
+credId = 'jenkinsgithub'
+username = 'jenkins'
+privateKeyStr = "-----BEGIN RSA PRIVATE KEY-----\nMIIJ"
+privateKeySource = new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource(privateKeyStr)
+description = "Jenkins GitHub SSH Credentials"
+
+privateKey = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL,credId,username,privateKeySource,"",description)
+store.addCredentials(domain, privateKey)
+#+END_SRC
+
+*** ... trochu viac o izolepe
+- tieto skripty spúšťame cez jenkins-cli 
+- ide o +/- ekvivalent spúšťania skriptov v Jenkins konzole
+- $JENKINS/script
+[[./025script.png]]
+
+** Samostatná pipeline a Job Builder
+*** Jenkins Job Builder   
+- na konfiguráciu samostatnej pipeline používame
+ - https://docs.openstack.org/infra/jenkins-job-builder/
+ - baca7d15504a93c9d92f15e034470cbdc86f2615
+- s pluginom na podporu pipeline
+ - https://github.com/rusty-dev/jenkins-job-builder-pipeline
+#+BEGIN_SRC bash
+jenkins-jobs --conf config.ini update $DIR_WITH_YAML 
+#+END_SRC
+*** Yaml konfigurácia pre Pipeline
+#+BEGIN_SRC yaml 
+- job:
+    project-type: pipeline
+    concurrent: true
+    display-name: RHMAP Cluster Destroy
+    name: rhmap_cluster_destroy
+    parameters:
+    - string:
+        default: ''
+        description: Cluster Name
+        name: clusterName
+    pipeline:
+      script: |
+        #!groovy
+#+END_SRC
+*** .. v skutočnosti komplikovanejšie
+- Používame Jenkinsfile ktorý je v rovnakom adresári
+#+BEGIN_SRC yaml 
+ pipeline:
+      script-path: jobs/wendy/cluster/cluster-destroy/Jenkinsfile
+      scm:
+        - git:
+            branches:
+              - 'master'
+            url: 'git@github.com:fheng/jenkins-bob-builder.git'
+            credentials-id: jenkinsgithub
+            skip-tag: true
+            wipe-workspace: false
+#+END_SRC
+- väčšinou odkazujeme na GH
+ - netreba updatovať
+- máme skript na konverziu, pre testovacie účely
+
+** Jenkins, konfigurácia a Docker
+*** Kubernetes plugin 
+[[./026kubernetes.png]]
+
+*** Príklad - jenkins-slave-ansible
+[[./027ansible_slave.png]]
+
+*** Príklad - jenkins-slave-ansible
+- https://hub.docker.com/r/fhwendy/jenkins-slave-ansible/
+- zdroják
+  - https://github.com/feedhenry/wendy-jenkins-s2i-configuration
+  - /blob/master/slave-ansible/Dockerfile
+    
+*** jenkins-slave-ansible Dockerfile
+- používame vlastný base-image
+- pôvodne sme používali openshift/jenkins-slave-base-centos7
+#+BEGIN_SRC yaml 
+FROM docker.io/fhwendy/jenkins-slave-base-centos7:latest
+
+MAINTAINER Oleg Matskiv <omatskiv@redhat.com>
+
+USER root
+
+RUN yum -y install \
+        epel-release \
+        wget && 
+#+END_SRC
+
+*** Jenkins Master
+- openshift/jenkins-2-centos7
+  - s ďalšou konfiguráciou cez s2i 
+  - https://github.com/feedhenry/wendy-jenkins-s2i-configuration
+  - zoznam pluginov s verziami
+  - vyčistenie prednastavených jobov
+- s2i zoberie openshift/jenkins-2-centos7 a aplikuje kinfiguráciu z repa
+
+** OpenShift
+*** Prečo vlastne používame openshift?
+- Pretože sme ho už používali na iné projekty
+- Plánovali sme postaviť nový produkt na kombinácii Openshift+Jenkins
+- Konfigurácia == Kód
+
+#+BEGIN_SRC bash
+ oc login
+ oc new-project jenkins-wendy
+#+END_SRC
+
+*** Slave konfigurácia v openshifte 
+- slave-image-template.yaml
+#+BEGIN_SRC yaml 
+---
+apiVersion: v1
+kind: Template
+labels:
+  template: slave-image-wendy-template
+metadata:
+  annotations:
+    tags: jenkins
+  name: slave-image-wendy
+objects:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: ${IMAGE_NAME}
+    annotations:
+        slave-label: ${SLAVE_LABEL}
+    labels:
+      role: jenkins-slave
+  spec:
+    dockerImageRepository: "docker.io/fhwendy/${IMAGE_NAME}"
+#+END_SRC
+*** Parametre a nastavenie
+
+#+BEGIN_SRC yaml 
+parameters:
+- description: The name of the repository branch to reference in the configuration
+  displayName: Branch
+  name: IMAGE_NAME
+- description: The label
+  name: SLAVE_LABEL
+#+END_SRC
+
+#+BEGIN_SRC bash
+oc new-app -p SLAVE_LABEL="ansible" -p IMAGE_NAME=slave-ans -f  slave-image-template.yml
+#+END_SRC
+
+*** Jenkins Master integrovaný s openshiftom
+- autorizácia/autentizácia cez openshift
+- automatické limity na spustený slave
+- jednoduchšia integrácia s i.e. nexus3
+
+*** Pipeline integrovaná s openshiftom
+- prístup k openshiftu na ktorom beží
+- používame openshift na integrovanie databázy
+  - https://github.com/feedhenry/fh-pipeline-library/blob/master/vars/withOpenshiftServices.groovy
+#+BEGIN_SRC groovy
+    withOpenshiftServices(['mongodb']) {
+        stage('Acceptance Tests') {
+            sh 'grunt fh-accept'
+        }
+    }
+#+END_SRC
+
+*** Openshift ako build-server
+- používame openshift na update docker-hubu
+  - https://github.com/feedhenry/fh-pipeline-library/blob/master/vars/dockerBuildNodeComponent.groovy
+#+BEGIN_SRC groovy
+    stage('Build Image') {
+        dockerBuildNodeComponent(COMPONENT, DOCKER_HUB_ORG)
+    }
+#+END_SRC
+
+* Záverom
+
+*** Zhrnutie
+- odporúčam používať groovy, aj s knižnicami
+- konfigurácia v kóde je super aj ak lepená izolepou
+- ak už niekde máte openshift, použite ho
+
+*** Ďakujem za pozornosť!
+
+*** Otázky?
+

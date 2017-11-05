@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Automatizace otravné práce vývojářů pomocí Jenkinsu</title>
+<meta name="author" content="(Adam Saleh)"/>
+<meta name="description" content=""/>
+<meta name="keywords" content=""/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="http://cdn.jsdelivr.net/reveal.js/3.0.0/css/reveal.css"/>
+
+<link rel="stylesheet" href="http://cdn.jsdelivr.net/reveal.js/3.0.0/css/theme/moon.css" id="theme"/>
+
+<link rel="stylesheet" href="http://cdn.jsdelivr.net/reveal.js/3.0.0/lib/css/zenburn.css"/>
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'http://cdn.jsdelivr.net/reveal.js/3.0.0/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Automatizace otravné práce vývojářů pomocí Jenkinsu</h1><h2 class="author">Adam Saleh</h2><h2 class="date">2010-03-30 Tue</h2><p class="date">Created: 2017-11-05 Sun 13:53</p>
+</section>
+<section id="table-of-contents">
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-orgc01568e">1. Úvod</a>
+<ul>
+<li>
+<ul>
+<li><a href="#/slide-org552a382">1.0.1. Kde pracujem?</a></li>
+<li><a href="#/slide-org11fa17d">1.0.2. Ako to vyzerá?</a></li>
+<li><a href="#/slide-orgc1f7889">1.0.3. Poznámky k open-source</a></li>
+<li><a href="#/slide-orgfb514fc">1.0.4. Na čom naozaj pracujem?</a></li>
+<li><a href="#/slide-org05b49d5">1.0.5. Konkrétne</a></li>
+<li><a href="#/slide-org9021de0">1.0.6. Upozornenie</a></li>
+<li><a href="#/slide-org8a9f660">1.0.7. Čo myslím vlastným riešením?</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#/slide-orge60577f">2. Problémy</a>
+<ul>
+<li>
+<ul>
+<li><a href="#/slide-orgf49e244">2.0.1. Čo sme potrebovali vyriešiť?</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#/slide-org08fd8b7">3. Ukážka</a>
+<ul>
+<li><a href="#/slide-org41a1619">3.1. Denno-denná práca</a>
+<ul>
+<li><a href="#/slide-orgd6ff98c">3.1.1. Jeden z repozitárov:</a></li>
+<li><a href="#/slide-orgce7192c">3.1.2. Pull-Request</a></li>
+<li><a href="#/slide-org4a791c1">3.1.3. Testy</a></li>
+<li><a href="#/slide-org54f35d7">3.1.4. Testy</a></li>
+<li><a href="#/slide-org402d5cd">3.1.5. Pull-Request</a></li>
+<li><a href="#/slide-orgdaec084">3.1.6. Aktualizácia verzie v inštalátore</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org086a6a1">3.2. Vydanie novej verzie</a>
+<ul>
+<li><a href="#/slide-org3eea281">3.2.1. Jenkins</a></li>
+<li><a href="#/slide-org80db08b">3.2.2. RC-pipeline</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#/slide-orgbeb7306">4. Ako sme to dali dokopy</a>
+<ul>
+<li>
+<ul>
+<li><a href="#/slide-orgd8b15dc">4.0.1. Osnova</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org6e787d9">4.1. Kontrolovanie PR</a>
+<ul>
+<li><a href="#/slide-orgb161012">4.1.1. GitHub Organization Plugin</a></li>
+<li><a href="#/slide-org78b0ed6">4.1.2. Takto vyzerá nastavenie organizácie</a></li>
+<li><a href="#/slide-orgec37101">4.1.3. Odporúčam upresniť repozitáre</a></li>
+<li><a href="#/slide-org5d44706">4.1.4. Na strane GitHubu treba nastaviť hook</a></li>
+<li><a href="#/slide-orgcba712f">4.1.5. toto nám dá automatickú kontrolu</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org3816034">4.2. Jenkinsfile a Groovy</a>
+<ul>
+<li><a href="#/slide-orgb69fd05">4.2.1. Takto vyzerá jeden z našich Jenkinsfile</a></li>
+<li><a href="#/slide-org9ee4308">4.2.2. &#x2026;takto bez zdielanej knižnice?</a></li>
+<li><a href="#/slide-org8dce81a">4.2.3. syntax?</a></li>
+<li><a href="#/slide-orgc68480d">4.2.4. experimenty a vývoj s tlačítkom Replay</a></li>
+<li><a href="#/slide-org56ca0eb">4.2.5. formulár na generovanie kódu</a></li>
+<li><a href="#/slide-org4f294f2">4.2.6. zoznam sprístupnených premenných</a></li>
+<li><a href="#/slide-orgbc008a4">4.2.7. nie úple groovy</a></li>
+<li><a href="#/slide-org5ba1d27">4.2.8. práca s @NonCps</a></li>
+<li><a href="#/slide-org3b35a97">4.2.9. deklaratívna syntax?</a></li>
+<li><a href="#/slide-orgf462d28">4.2.10. UI pre deplarativnu syntax</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org995bbc6">4.3. Zdielanie kódu a Jenkinsfile</a>
+<ul>
+<li><a href="#/slide-orgd6479b6">4.3.1. &#x2026;v skutočnosti bez zdielanej knižnice</a></li>
+<li><a href="#/slide-org2fcd755">4.3.2. máme nakonfigurovanú knižicu</a></li>
+<li><a href="#/slide-org0b76bae">4.3.3. ktorá ukazuje na repozitár</a></li>
+<li><a href="#/slide-orgaf08b96">4.3.4. Takto môžem knižnicu použiť</a></li>
+<li><a href="#/slide-org32faa20">4.3.5. Čo ak potrebujem testovať s verziou vo vývoji?</a></li>
+<li><a href="#/slide-org9374d55">4.3.6. Čo ak potrebujem zmeniť funkciu?</a></li>
+<li><a href="#/slide-org483bc30">4.3.7. fh-pipeline-library vyzerá dôležito, ako ju testujete?</a></li>
+<li><a href="#/slide-orge93b993">4.3.8. samo-testovanie v fh-pipeline-library</a></li>
+<li><a href="#/slide-org66c9f78">4.3.9. Otázky?</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgb298d46">4.4. Konfigurácia Jenkinsu</a>
+<ul>
+<li><a href="#/slide-org4fd3f76">4.4.1. Všetko čo som tu doteraz ukazoval nastavujeme cez skripty</a></li>
+<li><a href="#/slide-orgf5c72ac">4.4.2. Ukážka</a></li>
+<li><a href="#/slide-orgefa24f5">4.4.3. konfiguračný skript</a></li>
+<li><a href="#/slide-org0bee5e1">4.4.4. Groovy skript na nastavenie gitu</a></li>
+<li><a href="#/slide-orgd7417c1">4.4.5. Groovy na nastavenie ssh kľúča</a></li>
+<li><a href="#/slide-org884d92d">4.4.6. &#x2026; trochu viac o izolepe</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgf98c7c4">4.5. Samostatná pipeline a Job Builder</a>
+<ul>
+<li><a href="#/slide-org9119baf">4.5.1. Jenkins Job Builder</a></li>
+<li><a href="#/slide-org3923cf2">4.5.2. Yaml konfigurácia pre Pipeline</a></li>
+<li><a href="#/slide-orga30ddfe">4.5.3. .. v skutočnosti komplikovanejšie</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org1c9f747">4.6. Jenkins, konfigurácia a Docker</a>
+<ul>
+<li><a href="#/slide-org92ff256">4.6.1. Kubernetes plugin</a></li>
+<li><a href="#/slide-org09e2a0e">4.6.2. Príklad - jenkins-slave-ansible</a></li>
+<li><a href="#/slide-orga1e5c69">4.6.3. Príklad - jenkins-slave-ansible</a></li>
+<li><a href="#/slide-org96b228d">4.6.4. jenkins-slave-ansible Dockerfile</a></li>
+<li><a href="#/slide-orgae2f9f5">4.6.5. Jenkins Master</a></li>
+</ul>
+</li>
+<li><a href="#/slide-orgf39a5e3">4.7. OpenShift</a>
+<ul>
+<li><a href="#/slide-org559b32c">4.7.1. Prečo vlastne používame openshift?</a></li>
+<li><a href="#/slide-org98e14d6">4.7.2. Slave konfigurácia v openshifte</a></li>
+<li><a href="#/slide-org35f5553">4.7.3. Parametre a nastavenie</a></li>
+<li><a href="#/slide-org51de8c2">4.7.4. Jenkins Master integrovaný s openshiftom</a></li>
+<li><a href="#/slide-org2da474e">4.7.5. Pipeline integrovaná s openshiftom</a></li>
+<li><a href="#/slide-orgc005c5e">4.7.6. Openshift ako build-server</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#/slide-orgf25b2f7">5. Záverom</a>
+<ul>
+<li>
+<ul>
+<li><a href="#/slide-orgc5e85b2">5.0.1. Zhrnutie</a></li>
+<li><a href="#/slide-org267c75d">5.0.2. Ďakujem za pozornosť!</a></li>
+<li><a href="#/slide-org7b554de">5.0.3. Otázky?</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<section id="slide-orgc01568e">
+<h2 id="orgc01568e"><span class="section-number-2">1</span> Úvod</h2>
+<div class="outline-text-2" id="text-1">
+</div></section>
+<section id="slide-org552a382">
+<h4 id="org552a382"><span class="section-number-4">1.0.1</span> Kde pracujem?</h4>
+<ul>
+<li>RedHat Mobile</li>
+<li>QA v Brně</li>
+<li>Platforma pre vývoj mobilných aplikácií - <b>closed-source</b></li>
+<li>Knižnice a integrovanie mobilných aplikácií s OpenShiftom - <b>open-source</b></li>
+
+</ul>
+
+</section>
+<section id="slide-org11fa17d">
+<h4 id="org11fa17d"><span class="section-number-4">1.0.2</span> Ako to vyzerá?</h4>
+
+<div class="figure">
+<p><img src="./forms.png" alt="forms.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-orgc1f7889">
+<h4 id="orgc1f7889"><span class="section-number-4">1.0.3</span> Poznámky k open-source</h4>
+<ul>
+<li><a href="https://aerogear.org">https://aerogear.org</a></li>
+<li><a href="http://feedhenry.org">http://feedhenry.org</a></li>
+<li>Pracujeme na ďalších veciach &#x2026;</li>
+
+</ul>
+
+</section>
+<section id="slide-orgfb514fc">
+<h4 id="orgfb514fc"><span class="section-number-4">1.0.4</span> Na čom naozaj pracujem?</h4>
+<ul>
+<li>automatizovanie</li>
+<li>Dev-Ops/Jenkins/CI-CD</li>
+<li>udržiavanie infraštruktúry (OpenShift)</li>
+
+</ul>
+
+</section>
+<section id="slide-org05b49d5">
+<h4 id="org05b49d5"><span class="section-number-4">1.0.5</span> Konkrétne</h4>
+<ul>
+<li>tím 4 ľudí ({gryan,mnair,pamccart}@redhat)</li>
+<li>pre cca 40-70 našich kolegov</li>
+<li>takmer rok práce</li>
+
+</ul>
+
+</section>
+<section id="slide-org9021de0">
+<h4 id="org9021de0"><span class="section-number-4">1.0.6</span> Upozornenie</h4>
+<ul>
+<li>opakovať po nás pravdepodobne nieje dobrý nápad</li>
+<li>infraštruktúra je drahá, konfigurácia je komplikovaná</li>
+<li>poskladajte si vlastné riešenie</li>
+<li>ani my nepoužívame všetko naraz</li>
+
+</ul>
+
+</section>
+<section id="slide-org8a9f660">
+<h4 id="org8a9f660"><span class="section-number-4">1.0.7</span> Čo myslím vlastným riešením?</h4>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Technológia</th>
+<th scope="col" class="org-left">Github PR</th>
+<th scope="col" class="org-left">Internal Pipelines</th>
+<th scope="col" class="org-left">Testing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Jenkins 2.0</td>
+<td class="org-left">✔</td>
+<td class="org-left">✔</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">Pipeline scripts</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">✔</td>
+<td class="org-left">✔</td>
+</tr>
+
+<tr>
+<td class="org-left">Jenkinsfiles in GitHub</td>
+<td class="org-left">✔</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">Jenkins-Job-Builder</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">✔</td>
+<td class="org-left">✔</td>
+</tr>
+
+<tr>
+<td class="org-left">Kubernetes-Slave provider</td>
+<td class="org-left">✔</td>
+<td class="org-left">✔</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">OpenShift deployment</td>
+<td class="org-left">✔</td>
+<td class="org-left">✔</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">Instrumented Configuration</td>
+<td class="org-left">✔</td>
+<td class="org-left">✔</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+</tbody>
+</table>
+
+</section>
+</section>
+<section>
+<section id="slide-orge60577f">
+<h2 id="orge60577f"><span class="section-number-2">2</span> Problémy</h2>
+<div class="outline-text-2" id="text-2">
+</div></section>
+<section id="slide-orgf49e244">
+<h4 id="orgf49e244"><span class="section-number-4">2.0.1</span> Čo sme potrebovali vyriešiť?</h4>
+<ul>
+<li>Denno-denná práca
+<ul>
+<li>kontrola zmien pri PR</li>
+<li>byrokracia pri testovaní zmien</li>
+
+</ul></li>
+<li>1/Mesiac vydanie novej verzie systému
+<ul>
+<li>skompilovať kód z 70 rôznych repozitárov</li>
+<li>aktualizovať konfiguráciu pre nasadenie na server</li>
+
+</ul></li>
+<li>zároveň aktualizovať zastaralú infraštruktúru</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org08fd8b7">
+<h2 id="org08fd8b7"><span class="section-number-2">3</span> Ukážka</h2>
+<div class="outline-text-2" id="text-3">
+</div></section>
+</section>
+<section>
+<section id="slide-org41a1619">
+<h3 id="org41a1619"><span class="section-number-3">3.1</span> Denno-denná práca</h3>
+<div class="outline-text-3" id="text-3-1">
+</div></section>
+<section id="slide-orgd6ff98c">
+<h4 id="orgd6ff98c"><span class="section-number-4">3.1.1</span> Jeden z repozitárov:</h4>
+
+<div class="figure">
+<p><img src="./000fhmbaas.png" alt="000fhmbaas.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-orgce7192c">
+<h4 id="orgce7192c"><span class="section-number-4">3.1.2</span> Pull-Request</h4>
+
+<div class="figure">
+<p><img src="./010fhmbaas.png" alt="010fhmbaas.png" />
+</p>
+</div>
+</section>
+<section id="slide-org4a791c1">
+<h4 id="org4a791c1"><span class="section-number-4">3.1.3</span> Testy</h4>
+
+<div class="figure">
+<p><img src="./011fhmbaas.png" alt="011fhmbaas.png" />
+</p>
+</div>
+</section>
+<section id="slide-org54f35d7">
+<h4 id="org54f35d7"><span class="section-number-4">3.1.4</span> Testy</h4>
+
+<div class="figure">
+<p><img src="./012fhmbaas.png" alt="012fhmbaas.png" />
+</p>
+</div>
+</section>
+<section id="slide-org402d5cd">
+<h4 id="org402d5cd"><span class="section-number-4">3.1.5</span> Pull-Request</h4>
+
+<div class="figure">
+<p><img src="./010fhmbaas.png" alt="010fhmbaas.png" />
+</p>
+</div>
+</section>
+<section id="slide-orgdaec084">
+<h4 id="orgdaec084"><span class="section-number-4">3.1.6</span> Aktualizácia verzie v inštalátore</h4>
+
+<div class="figure">
+<p><img src="./013fhmbaas.png" alt="013fhmbaas.png" />
+</p>
+</div>
+</section>
+</section>
+<section>
+<section id="slide-org086a6a1">
+<h3 id="org086a6a1"><span class="section-number-3">3.2</span> Vydanie novej verzie</h3>
+<div class="outline-text-3" id="text-3-2">
+</div></section>
+<section id="slide-org3eea281">
+<h4 id="org3eea281"><span class="section-number-4">3.2.1</span> Jenkins</h4>
+
+<div class="figure">
+<p><img src="./014internal_jenkins.png" alt="014internal_jenkins.png" />
+</p>
+</div>
+</section>
+<section id="slide-org80db08b">
+<h4 id="org80db08b"><span class="section-number-4">3.2.2</span> RC-pipeline</h4>
+
+<div class="figure">
+<p><img src="./RC-pipeline.png" alt="RC-pipeline.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-orgbeb7306">
+<h2 id="orgbeb7306"><span class="section-number-2">4</span> Ako sme to dali dokopy</h2>
+<div class="outline-text-2" id="text-4">
+</div></section>
+<section id="slide-orgd8b15dc">
+<h4 id="orgd8b15dc"><span class="section-number-4">4.0.1</span> Osnova</h4>
+<ul>
+<li>Kontrolovanie PR</li>
+<li>Jenkinsfile a Groovy</li>
+<li>Zdielanie kódu a Jenkinsfile</li>
+<li>Konfigurácia Jenkinsu</li>
+<li>Samostatná pipeline a Job Builder</li>
+<li>Jenkins, konfigurácia a Docker</li>
+<li>OpenShift</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org6e787d9">
+<h3 id="org6e787d9"><span class="section-number-3">4.1</span> Kontrolovanie PR</h3>
+<div class="outline-text-3" id="text-4-1">
+</div></section>
+<section id="slide-orgb161012">
+<h4 id="orgb161012"><span class="section-number-4">4.1.1</span> GitHub Organization Plugin</h4>
+
+<div class="figure">
+<p><img src="./015gh_org.png" alt="015gh_org.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-org78b0ed6">
+<h4 id="org78b0ed6"><span class="section-number-4">4.1.2</span> Takto vyzerá nastavenie organizácie</h4>
+
+<div class="figure">
+<p><img src="./017gh_org_feedhenry.png" alt="017gh_org_feedhenry.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-orgec37101">
+<h4 id="orgec37101"><span class="section-number-4">4.1.3</span> Odporúčam upresniť repozitáre</h4>
+
+<div class="figure">
+<p><img src="./016gh_org_filter.png" alt="016gh_org_filter.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-org5d44706">
+<h4 id="org5d44706"><span class="section-number-4">4.1.4</span> Na strane GitHubu treba nastaviť hook</h4>
+
+<div class="figure">
+<p><img src="./018gh_org_webhook.png" alt="018gh_org_webhook.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-orgcba712f">
+<h4 id="orgcba712f"><span class="section-number-4">4.1.5</span> toto nám dá automatickú kontrolu</h4>
+
+<div class="figure">
+<p><img src="./019gh_org_list.png" alt="019gh_org_list.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-org3816034">
+<h3 id="org3816034"><span class="section-number-3">4.2</span> Jenkinsfile a Groovy</h3>
+<div class="outline-text-3" id="text-4-2">
+</div></section>
+<section id="slide-orgb69fd05">
+<h4 id="orgb69fd05"><span class="section-number-4">4.2.1</span> Takto vyzerá jeden z našich Jenkinsfile</h4>
+<div class="org-src-container">
+
+<pre><code class="groovy" >@Library('fh-pipeline-library') _
+node('nodejs4') {
+    step([$class: 'WsCleanup'])
+    stage ('Checkout') {
+        checkout scm
+    }
+    stage('Install Dependencies') {
+        npmInstall {}
+    }
+    stage('Unit tests') {
+        sh 'grunt fh-unit'
+    }
+    stage('Build') {
+        gruntBuild { name = 'fh-mbaas-api' }
+    }
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org9ee4308">
+<h4 id="org9ee4308"><span class="section-number-4">4.2.2</span> &#x2026;takto bez zdielanej knižnice?</h4>
+<div class="org-src-container">
+
+<pre><code class="groovy" >
+node('nodejs4') {
+    step([$class: 'WsCleanup'])
+    stage ('Checkout') {
+        checkout scm
+    }
+    stage('Install Dependencies') {
+        sh "npm install"
+    }
+    stage('Unit tests') {
+        sh 'grunt unit'
+    }
+    stage('Build') {
+        sh "grunt dist"
+    }
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org8dce81a">
+<h4 id="org8dce81a"><span class="section-number-4">4.2.3</span> syntax?</h4>
+<ul>
+<li><a href="https://jenkins.io/doc/pipeline/steps/">https://jenkins.io/doc/pipeline/steps/</a></li>
+<li><a href="https://jenkins.io/doc/pipeline/examples/">https://jenkins.io/doc/pipeline/examples/</a></li>
+<li><a href="https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/">https://jenkins.io/doc/pipeline/steps/workflow-basic-steps/</a></li>
+
+</ul>
+
+</section>
+<section id="slide-orgc68480d">
+<h4 id="orgc68480d"><span class="section-number-4">4.2.4</span> experimenty a vývoj s tlačítkom Replay</h4>
+
+<div class="figure">
+<p><img src="./020replay.png" alt="020replay.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-org56ca0eb">
+<h4 id="org56ca0eb"><span class="section-number-4">4.2.5</span> formulár na generovanie kódu</h4>
+
+<div class="figure">
+<p><img src="./021replay.png" alt="021replay.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-org4f294f2">
+<h4 id="org4f294f2"><span class="section-number-4">4.2.6</span> zoznam sprístupnených premenných</h4>
+
+<div class="figure">
+<p><img src="./022variables.png" alt="022variables.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-orgbc008a4">
+<h4 id="orgbc008a4"><span class="section-number-4">4.2.7</span> nie úple groovy</h4>
+<ul>
+<li>všetok kód musí byť serializovateľný</li>
+<li><p>
+pred májom (květen) nefungovalo
+</p>
+<div class="org-src-container">
+
+<pre><code class="groovy" >list.each { param -&gt;
+    println "Param: ${param}"
+}
+</code></pre>
+</div></li>
+<li>už funguje, ale treba mať jenkins &gt;2.7</li>
+<li>pri problémoch sa dá použiť anotácia @NonCPS</li>
+
+</ul>
+</section>
+<section id="slide-org5ba1d27">
+<h4 id="org5ba1d27"><span class="section-number-4">4.2.8</span> práca s @NonCps</h4>
+<div class="org-src-container">
+
+<pre><code class="groovy" >@NonCPS
+def printParams(list) {
+ list.each { param -&gt;
+     println "Param: ${param}"
+ }
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org3b35a97">
+<h4 id="org3b35a97"><span class="section-number-4">4.2.9</span> deklaratívna syntax?</h4>
+<ul>
+<li>Existuje aj <a href="https://jenkins.io/doc/book/pipeline/syntax/#declarative-pipeline">https://jenkins.io/doc/book/pipeline/syntax/#declarative-pipeline</a></li>
+<li>Integrované s UI</li>
+<li>Zatiaľ sme nepoužili, príliš veľa zjednodušení</li>
+
+</ul>
+
+</section>
+<section id="slide-orgf462d28">
+<h4 id="orgf462d28"><span class="section-number-4">4.2.10</span> UI pre deplarativnu syntax</h4>
+
+<div class="figure">
+<p><img src="./023pipeline_editor.png" alt="023pipeline_editor.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-org995bbc6">
+<h3 id="org995bbc6"><span class="section-number-3">4.3</span> Zdielanie kódu a Jenkinsfile</h3>
+<div class="outline-text-3" id="text-4-3">
+</div></section>
+<section id="slide-orgd6479b6">
+<h4 id="orgd6479b6"><span class="section-number-4">4.3.1</span> &#x2026;v skutočnosti bez zdielanej knižnice</h4>
+<div class="org-src-container">
+
+<pre><code class="groovy" >
+node('nodejs4') {
+    step([$class: 'WsCleanup'])
+    stage ('Checkout') {
+        checkout scm
+    }
+    stage('Install Dependencies') {
+      sh '''
+        npm install --production
+        npm ls
+        npm install -g https://github.com/bucharest-gold/license-reporter#v0.3.0
+        license-reporter --ignore-version-range --all --silent --file licenses.xml
+        npm install
+      '''
+    }
+
+</code></pre>
+</div>
+<ul>
+<li>rovnakú sekvenciu máme v cca 40 repozitároch</li>
+
+</ul>
+
+</section>
+<section id="slide-org2fcd755">
+<h4 id="org2fcd755"><span class="section-number-4">4.3.2</span> máme nakonfigurovanú knižicu</h4>
+
+<div class="figure">
+<p><img src="./024pipeline_library.png" alt="024pipeline_library.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-org0b76bae">
+<h4 id="org0b76bae"><span class="section-number-4">4.3.3</span> ktorá ukazuje na repozitár</h4>
+<ul>
+<li><a href="https://github.com/feedhenry/fh-pipeline-library">https://github.com/feedhenry/fh-pipeline-library</a></li>
+<li><p>
+./vars/npmInstall.groovy
+</p>
+<div class="org-src-container">
+
+<pre><code class="groovy" >def call() {
+    sh '''
+        npm install --production
+        npm ls
+        npm install -g https://github.com/bucharest-gold/license-reporter#v0.3.0
+        license-reporter --ignore-version-range --all --silent --file licenses.xml
+        npm install
+        npm install grunt-cli -g
+      '''
+}
+</code></pre>
+</div></li>
+
+</ul>
+
+</section>
+<section id="slide-orgaf08b96">
+<h4 id="orgaf08b96"><span class="section-number-4">4.3.4</span> Takto môžem knižnicu použiť</h4>
+<div class="org-src-container">
+
+<pre><code class="groovy" >@Library('fh-pipeline-library') _
+node('nodejs4') {
+    step([$class: 'WsCleanup'])
+    stage ('Checkout') {
+        checkout scm
+    }
+    stage('Install Dependencies') {
+        npmInstall()
+    }
+
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org32faa20">
+<h4 id="org32faa20"><span class="section-number-4">4.3.5</span> Čo ak potrebujem testovať s verziou vo vývoji?</h4>
+<div class="org-src-container">
+
+<pre><code class="groovy" >@Library('fh-pipeline-library@PR-128') _
+node('nodejs4') {
+    step([$class: 'WsCleanup'])
+    stage ('Checkout') {
+        checkout scm
+    }
+    stage('Install Dependencies') {
+        npmInstall()
+    }
+
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org9374d55">
+<h4 id="org9374d55"><span class="section-number-4">4.3.6</span> Čo ak potrebujem zmeniť funkciu?</h4>
+<ul>
+<li>toto robíme opatrne</li>
+<li>čo ak sa niektorý z 70 repozitárov bude spoliehať na starú verziu?</li>
+<li><p>
+fh-pipeline-library/vars/dockerBinaryBuild.groovyy
+</p>
+<div class="org-src-container">
+
+<pre><code class="groovy" >def call(String name, String version, String dockerHubOrg, String dockerHubRepo = name, String credentialId = "dockerhubjenkins", String fromDir = './docker', Closure body = {}) {
+    echo "Deprecated: this should no longer be needed, use `buildWithDockerStrategy` instead"
+    params = [name: name, org= dockerHubOrg ...]
+    buildWithDockerStrategy params
+}
+</code></pre>
+</div></li>
+<li>nová funkcia je v fh-pipeline-library/vars/buildWithDockerStrategy.groovy</li>
+
+</ul>
+
+</section>
+<section id="slide-org483bc30">
+<h4 id="org483bc30"><span class="section-number-4">4.3.7</span> fh-pipeline-library vyzerá dôležito, ako ju testujete?</h4>
+<ul>
+<li>existujú unit-testy, ale zatiaľ sme ich nepoužili</li>
+<li><a href="https://github.com/macg33zr/pipelineUnit">https://github.com/macg33zr/pipelineUnit</a></li>
+<li>máme vo fh-pipeline-library Jenkinsfile</li>
+<li>Jenkinsfile vie zistiť či má testovať zmenenú knižnicu</li>
+<li><a href="https://github.com/feedhenry/fh-pipeline-library/blob/master/Jenkinsfile">https://github.com/feedhenry/fh-pipeline-library/blob/master/Jenkinsfile</a></li>
+
+</ul>
+
+</section>
+<section id="slide-orge93b993">
+<h4 id="orge93b993"><span class="section-number-4">4.3.8</span> samo-testovanie v fh-pipeline-library</h4>
+<div class="org-src-container">
+
+<pre><code class="groovy" >env.BRANCH_NAME = env.BRANCH_NAME ?: 'master'
+String gitref = env.CHANGE_ID ? "pr/${env.CHANGE_ID}" : env.BRANCH_NAME
+def fhPipelineLibrary = library("fh-pipeline-library@${gitref}")
+def utils = fhPipelineLibrary.org.feedhenry.Utils.new()
+
+testStage('getReleaseBranch') {
+    print utils.getReleaseBranch('1.2.3')
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org66c9f78">
+<h4 id="org66c9f78"><span class="section-number-4">4.3.9</span> Otázky?</h4>
+<ul>
+<li>podľa mňa som práve skončil s tým pekným a zaujímavým :)</li>
+<li>náleduje ifraštruktúra ktorá drží po kope izolepou :)</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgb298d46">
+<h3 id="orgb298d46"><span class="section-number-3">4.4</span> Konfigurácia Jenkinsu</h3>
+<div class="outline-text-3" id="text-4-4">
+</div></section>
+<section id="slide-org4fd3f76">
+<h4 id="org4fd3f76"><span class="section-number-4">4.4.1</span> Všetko čo som tu doteraz ukazoval nastavujeme cez skripty</h4>
+<ul>
+<li>Organizácie na GitHube</li>
+<li>fh-pipeline-library</li>
+<li>účet na prihlasovanie do
+<ul>
+<li>GitHubu (kde máme zdrojáky)</li>
+<li>AWS (kde nám bežia servery)</li>
+<li>Jira (kde máme issue-tracking)</li>
+
+</ul></li>
+<li>a veľa ďalších vecí</li>
+
+</ul>
+
+</section>
+<section id="slide-orgf5c72ac">
+<h4 id="orgf5c72ac"><span class="section-number-4">4.4.2</span> Ukážka</h4>
+<ul>
+<li>interné repo</li>
+<li>config.ini</li>
+
+</ul>
+<pre  class="example">
+[jenkins]
+user=updateme
+password=updateme
+url=http://updateme.com:9999
+query_plugins_info=False
+</pre>
+</section>
+<section id="slide-orgefa24f5">
+<h4 id="orgefa24f5"><span class="section-number-4">4.4.3</span> konfiguračný skript</h4>
+<ul>
+<li>scripts/configure<sub>jenkins.sh</sub></li>
+
+</ul>
+<div class="org-src-container">
+
+<pre><code class="bash" >SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CONFIG="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
+do_groovy_script_command() {
+  $SCRIPTS_DIR/run_groovy_script.sh $CONFIG $REMOTE $SCRIPTS_DIR/"$@"
+}
+#Git (Git plugin)
+do_groovy_script_command 'set_git_global_config.groovy'
+
+#Credentials
+do_groovy_script_command 'add_ssh_credentials.groovy'
+</code></pre>
+</div>
+</section>
+<section id="slide-org0bee5e1">
+<h4 id="org0bee5e1"><span class="section-number-4">4.4.4</span> Groovy skript na nastavenie gitu</h4>
+<div class="org-src-container">
+
+<pre><code class="groovy" >import jenkins.model.*
+def inst = Jenkins.getInstance()
+def desc = inst.getDescriptor("hudson.plugins.git.GitSCM")
+desc.setGlobalConfigName("Jenkins")
+desc.setGlobalConfigEmail("jenkins@wendy.feedhenry.net")
+desc.save()
+</code></pre>
+</div>
+</section>
+<section id="slide-orgd7417c1">
+<h4 id="orgd7417c1"><span class="section-number-4">4.4.5</span> Groovy na nastavenie ssh kľúča</h4>
+<div class="org-src-container">
+
+<pre><code class="groovy" >import jenkins.model.*
+import com.cloudbees.plugins.credentials.*
+import com.cloudbees.plugins.credentials.common.*
+import com.cloudbees.plugins.credentials.domains.*
+import com.cloudbees.plugins.credentials.impl.*
+import com.cloudbees.jenkins.plugins.sshcredentials.impl.*
+import hudson.plugins.sshslaves.*;
+domain = Domain.global()
+store = Jenkins.instance.getExtensionList('com.cloudbees.plugins.credentials.SystemCredentialsProvider')[0].getStore()
+credId = 'jenkinsgithub'
+username = 'jenkins'
+privateKeyStr = "-----BEGIN RSA PRIVATE KEY-----\nMIIJ"
+privateKeySource = new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource(privateKeyStr)
+description = "Jenkins GitHub SSH Credentials"
+
+privateKey = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL,credId,username,privateKeySource,"",description)
+store.addCredentials(domain, privateKey)
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org884d92d">
+<h4 id="org884d92d"><span class="section-number-4">4.4.6</span> &#x2026; trochu viac o izolepe</h4>
+<ul>
+<li>tieto skripty spúšťame cez jenkins-cli</li>
+<li>ide o +/- ekvivalent spúšťania skriptov v Jenkins konzole</li>
+<li>$JENKINS/script</li>
+
+</ul>
+
+<div class="figure">
+<p><img src="./025script.png" alt="025script.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-orgf98c7c4">
+<h3 id="orgf98c7c4"><span class="section-number-3">4.5</span> Samostatná pipeline a Job Builder</h3>
+<div class="outline-text-3" id="text-4-5">
+</div></section>
+<section id="slide-org9119baf">
+<h4 id="org9119baf"><span class="section-number-4">4.5.1</span> Jenkins Job Builder</h4>
+<ul>
+<li>na konfiguráciu samostatnej pipeline používame
+<ul>
+<li><a href="https://docs.openstack.org/infra/jenkins-job-builder/">https://docs.openstack.org/infra/jenkins-job-builder/</a></li>
+<li>baca7d15504a93c9d92f15e034470cbdc86f2615</li>
+
+</ul></li>
+<li>s pluginom na podporu pipeline
+<ul>
+<li><a href="https://github.com/rusty-dev/jenkins-job-builder-pipeline">https://github.com/rusty-dev/jenkins-job-builder-pipeline</a></li>
+
+</ul></li>
+
+</ul>
+<div class="org-src-container">
+
+<pre><code class="bash" >jenkins-jobs --conf config.ini update $DIR_WITH_YAML 
+</code></pre>
+</div>
+</section>
+<section id="slide-org3923cf2">
+<h4 id="org3923cf2"><span class="section-number-4">4.5.2</span> Yaml konfigurácia pre Pipeline</h4>
+<div class="org-src-container">
+
+<pre><code class="yaml" >- job:
+    project-type: pipeline
+    concurrent: true
+    display-name: RHMAP Cluster Destroy
+    name: rhmap_cluster_destroy
+    parameters:
+    - string:
+        default: ''
+        description: Cluster Name
+        name: clusterName
+    pipeline:
+      script: |
+        #!groovy
+</code></pre>
+</div>
+</section>
+<section id="slide-orga30ddfe">
+<h4 id="orga30ddfe"><span class="section-number-4">4.5.3</span> .. v skutočnosti komplikovanejšie</h4>
+<ul>
+<li>Používame Jenkinsfile ktorý je v rovnakom adresári</li>
+
+</ul>
+<div class="org-src-container">
+
+<pre><code class="yaml" >pipeline:
+     script-path: jobs/wendy/cluster/cluster-destroy/Jenkinsfile
+     scm:
+       - git:
+           branches:
+             - 'master'
+           url: 'git@github.com:fheng/jenkins-bob-builder.git'
+           credentials-id: jenkinsgithub
+           skip-tag: true
+           wipe-workspace: false
+</code></pre>
+</div>
+<ul>
+<li>väčšinou odkazujeme na GH
+<ul>
+<li>netreba updatovať</li>
+
+</ul></li>
+<li>máme skript na konverziu, pre testovacie účely</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org1c9f747">
+<h3 id="org1c9f747"><span class="section-number-3">4.6</span> Jenkins, konfigurácia a Docker</h3>
+<div class="outline-text-3" id="text-4-6">
+</div></section>
+<section id="slide-org92ff256">
+<h4 id="org92ff256"><span class="section-number-4">4.6.1</span> Kubernetes plugin</h4>
+
+<div class="figure">
+<p><img src="./026kubernetes.png" alt="026kubernetes.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-org09e2a0e">
+<h4 id="org09e2a0e"><span class="section-number-4">4.6.2</span> Príklad - jenkins-slave-ansible</h4>
+
+<div class="figure">
+<p><img src="./027ansible_slave.png" alt="027ansible_slave.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-orga1e5c69">
+<h4 id="orga1e5c69"><span class="section-number-4">4.6.3</span> Príklad - jenkins-slave-ansible</h4>
+<ul>
+<li><a href="https://hub.docker.com/r/fhwendy/jenkins-slave-ansible/">https://hub.docker.com/r/fhwendy/jenkins-slave-ansible/</a></li>
+<li>zdroják
+<ul>
+<li><a href="https://github.com/feedhenry/wendy-jenkins-s2i-configuration">https://github.com/feedhenry/wendy-jenkins-s2i-configuration</a></li>
+<li>/blob/master/slave-ansible/Dockerfile</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org96b228d">
+<h4 id="org96b228d"><span class="section-number-4">4.6.4</span> jenkins-slave-ansible Dockerfile</h4>
+<ul>
+<li>používame vlastný base-image</li>
+<li>pôvodne sme používali openshift/jenkins-slave-base-centos7</li>
+
+</ul>
+<div class="org-src-container">
+
+<pre><code class="yaml" >FROM docker.io/fhwendy/jenkins-slave-base-centos7:latest
+
+MAINTAINER Oleg Matskiv &lt;omatskiv@redhat.com&gt;
+
+USER root
+
+RUN yum -y install \
+        epel-release \
+        wget &amp;&amp; 
+</code></pre>
+</div>
+
+</section>
+<section id="slide-orgae2f9f5">
+<h4 id="orgae2f9f5"><span class="section-number-4">4.6.5</span> Jenkins Master</h4>
+<ul>
+<li>openshift/jenkins-2-centos7
+<ul>
+<li>s ďalšou konfiguráciou cez s2i</li>
+<li><a href="https://github.com/feedhenry/wendy-jenkins-s2i-configuration">https://github.com/feedhenry/wendy-jenkins-s2i-configuration</a></li>
+<li>zoznam pluginov s verziami</li>
+<li>vyčistenie prednastavených jobov</li>
+
+</ul></li>
+<li>s2i zoberie openshift/jenkins-2-centos7 a aplikuje kinfiguráciu z repa</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgf39a5e3">
+<h3 id="orgf39a5e3"><span class="section-number-3">4.7</span> OpenShift</h3>
+<div class="outline-text-3" id="text-4-7">
+</div></section>
+<section id="slide-org559b32c">
+<h4 id="org559b32c"><span class="section-number-4">4.7.1</span> Prečo vlastne používame openshift?</h4>
+<ul>
+<li>Pretože sme ho už používali na iné projekty</li>
+<li>Plánovali sme postaviť nový produkt na kombinácii Openshift+Jenkins</li>
+<li>Konfigurácia == Kód</li>
+
+</ul>
+
+<div class="org-src-container">
+
+<pre><code class="bash" >oc login
+oc new-project jenkins-wendy
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org98e14d6">
+<h4 id="org98e14d6"><span class="section-number-4">4.7.2</span> Slave konfigurácia v openshifte</h4>
+<ul>
+<li>slave-image-template.yaml</li>
+
+</ul>
+<div class="org-src-container">
+
+<pre><code class="yaml" >---
+apiVersion: v1
+kind: Template
+labels:
+  template: slave-image-wendy-template
+metadata:
+  annotations:
+    tags: jenkins
+  name: slave-image-wendy
+objects:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: ${IMAGE_NAME}
+    annotations:
+        slave-label: ${SLAVE_LABEL}
+    labels:
+      role: jenkins-slave
+  spec:
+    dockerImageRepository: "docker.io/fhwendy/${IMAGE_NAME}"
+</code></pre>
+</div>
+</section>
+<section id="slide-org35f5553">
+<h4 id="org35f5553"><span class="section-number-4">4.7.3</span> Parametre a nastavenie</h4>
+<div class="org-src-container">
+
+<pre><code class="yaml" >parameters:
+- description: The name of the repository branch to reference in the configuration
+  displayName: Branch
+  name: IMAGE_NAME
+- description: The label
+  name: SLAVE_LABEL
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre><code class="bash" >oc new-app -p SLAVE_LABEL="ansible" -p IMAGE_NAME=slave-ans -f  slave-image-template.yml
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org51de8c2">
+<h4 id="org51de8c2"><span class="section-number-4">4.7.4</span> Jenkins Master integrovaný s openshiftom</h4>
+<ul>
+<li>autorizácia/autentizácia cez openshift</li>
+<li>automatické limity na spustený slave</li>
+<li>jednoduchšia integrácia s i.e. nexus3</li>
+
+</ul>
+
+</section>
+<section id="slide-org2da474e">
+<h4 id="org2da474e"><span class="section-number-4">4.7.5</span> Pipeline integrovaná s openshiftom</h4>
+<ul>
+<li>prístup k openshiftu na ktorom beží</li>
+<li>používame openshift na integrovanie databázy
+<ul>
+<li><a href="https://github.com/feedhenry/fh-pipeline-library/blob/master/vars/withOpenshiftServices.groovy">https://github.com/feedhenry/fh-pipeline-library/blob/master/vars/withOpenshiftServices.groovy</a></li>
+
+</ul></li>
+
+</ul>
+<div class="org-src-container">
+
+<pre><code class="groovy" >withOpenshiftServices(['mongodb']) {
+    stage('Acceptance Tests') {
+        sh 'grunt fh-accept'
+    }
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-orgc005c5e">
+<h4 id="orgc005c5e"><span class="section-number-4">4.7.6</span> Openshift ako build-server</h4>
+<ul>
+<li>používame openshift na update docker-hubu
+<ul>
+<li><a href="https://github.com/feedhenry/fh-pipeline-library/blob/master/vars/dockerBuildNodeComponent.groovy">https://github.com/feedhenry/fh-pipeline-library/blob/master/vars/dockerBuildNodeComponent.groovy</a></li>
+
+</ul></li>
+
+</ul>
+<div class="org-src-container">
+
+<pre><code class="groovy" >stage('Build Image') {
+    dockerBuildNodeComponent(COMPONENT, DOCKER_HUB_ORG)
+}
+</code></pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-orgf25b2f7">
+<h2 id="orgf25b2f7"><span class="section-number-2">5</span> Záverom</h2>
+<div class="outline-text-2" id="text-5">
+</div></section>
+<section id="slide-orgc5e85b2">
+<h4 id="orgc5e85b2"><span class="section-number-4">5.0.1</span> Zhrnutie</h4>
+<ul>
+<li>odporúčam používať groovy, aj s knižnicami</li>
+<li>konfigurácia v kóde je super aj ak lepená izolepou</li>
+<li>ak už niekde máte openshift, použite ho</li>
+
+</ul>
+
+</section>
+<section id="slide-org267c75d">
+<h4 id="org267c75d"><span class="section-number-4">5.0.2</span> Ďakujem za pozornosť!</h4>
+
+</section>
+<section id="slide-org7b554de">
+<h4 id="org7b554de"><span class="section-number-4">5.0.3</span> Otázky?</h4>
+</section>
+</section>
+</div>
+</div>
+<script src="http://cdn.jsdelivr.net/reveal.js/3.0.0/lib/js/head.min.js"></script>
+<script src="http://cdn.jsdelivr.net/reveal.js/3.0.0/js/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+
+controls: true,
+progress: true,
+history: false,
+center: true,
+slideNumber: 'c',
+rollingLinks: false,
+keyboard: true,
+overview: true,
+
+theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+transition: Reveal.getQueryHash().transition || 'fade', // default/cube/page/concave/zoom/linear/fade/none
+transitionSpeed: 'default',
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'http://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }]
+});
+</script>
+</body>
+</html>
